@@ -1,0 +1,2 @@
+C:\Users\Ryan\source\repos\ACAmmo\Debug\ACAmmo.dll
+C:\Users\Ryan\source\repos\ACAmmo\Debug\ACAmmo.pdb

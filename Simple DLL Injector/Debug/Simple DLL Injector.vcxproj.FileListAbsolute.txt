@@ -1,0 +1,2 @@
+C:\Users\Ryan\source\repos\Simple DLL Injector\Debug\Simple DLL Injector.exe
+C:\Users\Ryan\source\repos\Simple DLL Injector\Debug\Simple DLL Injector.pdb
