@@ -7,7 +7,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
     
-    bool bAmmo = false, bHealth = false, bRecoil = false;
+    bool bAmmo = false, bInvincible = false, bRecoil = false;
 
     while (true)
     {
@@ -25,18 +25,19 @@ DWORD APIENTRY hackthread(LPVOID hModule)
 
         if (GetAsyncKeyState(VK_F1) & 1)
         {
-            if (bHealth)    //Restore default health/amor values
+            if (bInvincible)
             {
                 *(int*)(*local_player_addr + 0xF8) = 100;
                 *(int*)(*local_player_addr + 0xFC) = 0;
             }
-            bHealth = !bHealth;
+
+            bInvincible = !bInvincible;
         }
 
-        if (bHealth)    //Replenish health/armor indefinitely
+        if (bInvincible)    //Replenish health/armor indefinitely
         {
-            *(int*)(*local_player_addr + 0xF8) = 200;
-            *(int*)(*local_player_addr + 0xFC) = 200;
+            *(int*)(*local_player_addr + 0xF8) = 999;
+            *(int*)(*local_player_addr + 0xFC) = 999;
         }
         
         if (GetAsyncKeyState(VK_F2) & 1)
