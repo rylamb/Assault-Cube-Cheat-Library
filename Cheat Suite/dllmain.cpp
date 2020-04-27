@@ -7,7 +7,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
     uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* localPlayerAddress = (uintptr_t*)(moduleBase + 0x10F4F4);
     
-    bool bAmmo = false, bHealth = false;
+    bool bAmmo = false, invincible = false;
 
     while (true)
     {
@@ -18,8 +18,18 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             break;
         }
 
-        if (GetAsyncKeyState(VK_F1) & 1) bHealth = !bHealth;
-        if (bHealth)
+        if (GetAsyncKeyState(VK_F1) & 1)
+        {
+            if (invincible)
+            {
+                *(int*)(*localPlayerAddress + 0xF8) = 100;
+                *(int*)(*localPlayerAddress + 0xFC) = 0;
+            }
+
+            invincible = !invincible;
+        }
+
+        if (invincible)
         {
             *(int*)(*localPlayerAddress + 0xF8) = 999;
             *(int*)(*localPlayerAddress + 0xFC) = 999;
