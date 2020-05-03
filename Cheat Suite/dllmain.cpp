@@ -7,7 +7,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
     
-    bool bAmmo = false, bInvincible = false, bRecoil = false;
+    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false;
 
     while (true)
     {
@@ -67,6 +67,48 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             else
             {
                 mem::write((BYTE*)(module_base + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);       //Restore recoil function
+            }
+        }
+        
+        if (GetAsyncKeyState(VK_F4) & 1)
+        {
+            bFast = !bFast;
+        }
+        
+        if (bFast)
+        {
+            //Switch statement -> check value of Speed/Direction memory address and update as needed
+            int* speed = (int*)(*local_player_addr + 0x80);
+            switch (*speed)
+            {
+            case 1:     //Forward
+            {
+                *speed = 2;
+                break;
+            }
+            case 255:   //Backwards
+            {
+                *speed = 254;
+                break;
+            }
+            /*
+            left and right strafe commented out 
+            because modifying them results in 
+            diagonal movement & movement lock
+
+            case 65280: //Right
+            {
+                *speed = 65282;
+                break;
+            }
+            case 256:   //Left
+            {
+                *speed = 258;
+                break;
+            }
+            */
+            default:
+                break;
             }
         }
 
