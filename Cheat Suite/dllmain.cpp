@@ -4,9 +4,6 @@
 #include <Windows.h>
 #include <iostream>
 #include "aimbot.h"
-#include <vector>
-
-using std::vector;
 
 
 DWORD APIENTRY hackthread(LPVOID hModule)
@@ -15,23 +12,14 @@ DWORD APIENTRY hackthread(LPVOID hModule)
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
 
-    vector<playerent*> playerList;
-
-
-
-
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
-
-    fillEntityArray(local_player_addr, playerList);
-
-
     
     bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false;
 
     while (true)
     {
-
+        // Eject DLL
         if (GetAsyncKeyState(VK_END) & 1)
         {
             *(int*)(*local_player_addr + 0xF8) = 100;                               //Restore health to 100
@@ -43,6 +31,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             break;
         }
 
+        // Toggle Infinite Health and Armor
         if (GetAsyncKeyState(VK_F1) & 1)
         {
             if (bInvincible)
@@ -60,6 +49,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             *(int*)(*local_player_addr + 0xFC) = 999;
         }
         
+        // Toggle Infinite Ammo and Grenades
         if (GetAsyncKeyState(VK_F2) & 1)
         {
             bAmmo = !bAmmo;
@@ -77,6 +67,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             }
         }
 
+        // Toggle Recoil
         if (GetAsyncKeyState(VK_F3) & 1)
         {
             bRecoil = !bRecoil;
@@ -90,17 +81,12 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             }
         }
         
+        // Toggle Speed Increase
         if (GetAsyncKeyState(VK_F4) & 1)
         {
             bFast = !bFast;
         }
 
-        /*
-        if (GetAsyncKeyState(VK_F5) & 1)
-        {
-
-        }*/
-        
         if (bFast)
         {
             //Switch statement -> check value of Speed/Direction memory address and update as needed
@@ -136,6 +122,13 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             default:
                 break;
             }
+        }
+
+        // Toggle Aimbot
+        if (GetAsyncKeyState(VK_F5) & 1)
+        {
+            Aimbot::fillEntityArray();
+            Aimbot::printEntityArray();
         }
 
         Sleep(5);
