@@ -4,9 +4,12 @@
 
 std::vector<playerent*> playerList;
 std::vector<playerent*> targets;
+std::vector<float> distanceToBots;
 
 uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
+uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
+int numPlayers = *numPlayersAddr;
 
 float Vector3::vectorMagnitude()
 {
@@ -15,6 +18,30 @@ float Vector3::vectorMagnitude()
 
 void Aimbot::run()
 {
+	// Calculate position vectors, index is bot number in currentEntity array
+	std::vector<float> distanceFromPlayer;
+
+	for (int i = 0; i < numPlayers - 1; i++)
+	{
+		playerent* player = (playerent*)local_player_addr;
+
+		float deltaX = 0;
+		float deltaY = 0;
+		float deltaZ = 0;
+		float botX = playerList[i]->bodyPos.x;			// Same as head x coordinate
+		float botY = playerList[i]->bodyPos.y;			// Same as head y coordinate
+		float botZ = playerList[i]->headPos.z;
+
+		// The three components of the vector from the players head to the enemies head
+		deltaX = botX - player->bodyPos.x;
+		deltaY = botY - player->bodyPos.y;
+		deltaZ = botZ - player->headPos.z;
+
+		// Calculate the overall magnitude of the vector, store in distanceToBots array
+		float magnitude = sqrt(pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2));
+		distanceToBots.push_back(magnitude);
+	}
+
 	// if player no longer exists, or they are dead, or they are on my team
 		//continue
 
@@ -27,10 +54,8 @@ void Aimbot::run()
 void Aimbot::fillEntityArray()
 {
 	playerList.clear();
-	uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
 	uintptr_t entityListPtr = (uintptr_t)local_player_addr + 0x4;		// 10F4F8, location of where bots are stored
 	uintptr_t firstEntity = *(uintptr_t*)entityListPtr + 0x4;		// Index 0 is empty, first bot stored at index 1
-	int numPlayers = *numPlayersAddr;
 
 	for (int i = 0; i < numPlayers - 1; i++)
 	{
