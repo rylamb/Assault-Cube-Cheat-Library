@@ -15,7 +15,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
     
-    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false;
+    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false;
 
     while (true)
     {
@@ -127,8 +127,13 @@ DWORD APIENTRY hackthread(LPVOID hModule)
         // Toggle Aimbot
         if (GetAsyncKeyState(VK_F5) & 1)
         {
-            Aimbot::fillEntityArray();
-            Aimbot::printEntityArray();
+            bAimbot = !bAimbot;
+        }
+        
+        if (bAimbot)
+        {
+            Aimbot::run();
+            Aimbot::printTargetList();
         }
 
         Sleep(5);
