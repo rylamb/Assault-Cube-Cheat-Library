@@ -4,7 +4,6 @@
 
 std::vector<Player> playerList;
 std::vector<Player> targets;
-std::vector<float> distanceToBots;
 
 uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
