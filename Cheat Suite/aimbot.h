@@ -58,4 +58,7 @@ namespace Aimbot
 	void calcPlayerDistances();
 	void printEntityArray();
 	void printTargetList();
+	float vectorMagnitude(Vector3);
+	Vector3 findAngle(Vector3, Vector3);
+	float distanceBetweenTwoPoints(Vector3, Vector3);
 }

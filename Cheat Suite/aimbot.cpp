@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "aimbot.h"
+#include <cmath>
 
+#define PI 3.14159265f
 
 std::vector<Player> playerList;
 std::vector<Player> targets;
@@ -10,9 +12,32 @@ uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
 uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
 int numPlayers = *numPlayersAddr;
 
-float Vector3::vectorMagnitude()
+float Aimbot::vectorMagnitude(Vector3 vect)
 {
-	return sqrt(x * x + y * y + z * z);
+	return sqrt(vect.x * vect.x + vect.y * vect.y + vect.z * vect.z);
+}
+
+float Aimbot::distanceBetweenTwoPoints(Vector3 point1, Vector3 point2)
+{
+	Vector3 deltaVector;
+	deltaVector.x = (point2.x - point1.x);
+	deltaVector.y = (point2.y - point1.y);
+	deltaVector.z = (point2.z - point1.z);
+	
+	return vectorMagnitude(deltaVector);
+}
+
+Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
+{
+	// Calculates the angles between a vector defined by 2 points and the x,y,z axis
+	Vector3 resultantAngles;
+	float arcTanAngleX = (atan2(point2.x - point1.x, point2.y - point1.y) * 180 / PI + 180);
+	float arcTanAngleY = atan2(point2.z - point1.z, distanceBetweenTwoPoints(point1, point2));
+	
+	resultantAngles.x = arcTanAngleX;
+	resultantAngles.y = arcTanAngleY;
+	resultantAngles.z = 0.0;
+	return resultantAngles;
 }
 
 void Aimbot::run()
