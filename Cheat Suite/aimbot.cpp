@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "aimbot.h"
 #include <cmath>
+#include <algorithm>
 
 #define PI 3.14159265f
 
@@ -9,6 +10,7 @@ std::vector<Player> targets;
 
 uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
+playerent* localPlayer = (playerent*)*local_player_addr;
 uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
 int numPlayers = *numPlayersAddr;
 
@@ -44,12 +46,27 @@ void Aimbot::run()
 {
 	fillEntityArray();
 	getTargets();
+
+	for (unsigned int i = 0; i < targets.size(); i++)
+	{
+		targets[i].targetAngles = findAngle(localPlayer->headPos, targets[i].entAddr->headPos);
+	}
+	
 	calcPlayerDistances();
 
-	// sort targets by distances
+	std::sort(targets.begin(), targets.end(), comparator);
 
-	// if targets isn't empty
-		// se my yawPitchAngle to move to target
+	if (!targets.empty())
+	{
+		localPlayer->yawPitchRoll.x = targets[0].targetAngles.x;
+		localPlayer->yawPitchRoll.y = targets[0].targetAngles.y;
+		localPlayer->yawPitchRoll.z = targets[0].targetAngles.z;
+	}
+}
+
+bool Aimbot::comparator(Player p1, Player p2)
+{
+	return p1.distanceToPlayer < p2.distanceToPlayer;
 }
 
 
@@ -91,25 +108,23 @@ void Aimbot::getTargets()
 
 void Aimbot::calcPlayerDistances()
 {
-	for (unsigned int i = 0; i < playerList.size(); i++)
+	for (unsigned int i = 0; i < targets.size(); i++)
 	{
-		playerent* player = (playerent*)local_player_addr;
-
 		float deltaX = 0;
 		float deltaY = 0;
 		float deltaZ = 0;
-		float botX = playerList[i].entAddr->headPos.x;			// Same as head x coordinate
-		float botY = playerList[i].entAddr->headPos.y;			// Same as head y coordinate
-		float botZ = playerList[i].entAddr->headPos.z;
+		float botX = targets[i].entAddr->headPos.x;			// Same as head x coordinate
+		float botY = targets[i].entAddr->headPos.y;			// Same as head y coordinate
+		float botZ = targets[i].entAddr->headPos.z;
 
 		// The three components of the vector from the players head to the enemies head
-		deltaX = botX - player->headPos.x;
-		deltaY = botY - player->headPos.y;
-		deltaZ = botZ - player->headPos.z;
+		deltaX = botX - localPlayer->headPos.x;
+		deltaY = botY - localPlayer->headPos.y;
+		deltaZ = botZ - localPlayer->headPos.z;
 
 		// Calculate the overall magnitude of the vector, store in distanceToBots array
 		float magnitude = sqrt(pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2));
-		playerList[i].distanceToPlayer = magnitude;
+		targets[i].distanceToPlayer = magnitude;
 	}
 }
 

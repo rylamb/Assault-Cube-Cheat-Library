@@ -130,10 +130,10 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             bAimbot = !bAimbot;
         }
         
-        if (bAimbot)
+        if (GetAsyncKeyState(VK_RBUTTON) && bAimbot)
         {
             Aimbot::run();
-            Aimbot::printTargetList();
+            //Aimbot::printTargetList();
         }
 
         Sleep(5);
