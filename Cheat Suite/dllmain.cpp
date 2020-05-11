@@ -1,13 +1,14 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "mem.h"
+#include "wallHack.h"
 
 DWORD APIENTRY hackthread(LPVOID hModule)
 {
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
     
-    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false;
+    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bESP = false;
 
     while (true)
     {
@@ -111,6 +112,12 @@ DWORD APIENTRY hackthread(LPVOID hModule)
                 break;
             }
         }
+
+        if (GetAsyncKeyState(VK_F5) & 1)
+            bESP = !bESP;
+
+        if (bESP)
+            wallHackMain();
 
         Sleep(5);
     }
