@@ -142,6 +142,7 @@ DWORD WINAPI wallHackMain()
 		//If it is a free-for-all gamemode, draw a box around every entity in the game.
 		else
 		{
+		    //Draw a box around any entity that isn't NULL.
 			if (eAddr != NULL)
 			{
 				//Sets enemy's position points and add them to a Vec3 vector (passed to WorldToScreen).
@@ -156,8 +157,7 @@ DWORD WINAPI wallHackMain()
 				float enemyZHead = *(float*)(eAddr + 0xC);
 				Vec3 enemyHeadPos = { enemyXHead, enemyYHead, enemyZHead };
 
-				//Calls to the WorldToScreen function converts 3D position in the world to a 2D position that 
-				//will allow us to accurately draw a rectangle around the enemy's position on the screen.
+                //If the enemy is on our screen (determined by return value of WorldToScreen(), draw a rectangle around it.
 				if (WorldToScreen(enemyPos, vecBase, esp.viewMatrix, 1024, 768))
 				{
 					if (WorldToScreen(enemyHeadPos, vecHead, esp.viewMatrix, 1024, 768))
