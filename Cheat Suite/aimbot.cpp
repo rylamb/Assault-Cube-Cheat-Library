@@ -33,8 +33,11 @@ Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
 {
 	// Calculates the angles between a vector defined by 2 points and the x,y,z axis
 	Vector3 resultantAngles;
-	float arcTanAngleX = (atan2(point2.x - point1.x, point2.y - point1.y) * 180 / PI + 180);
-	float arcTanAngleY = atan2(point2.z - point1.z, distanceBetweenTwoPoints(point1, point2));
+	float arcTanAngleX = ((-atan2f(point2.x - point1.x, point2.y - point1.y) * (180 / PI)) + 180);
+	float arcTanAngleY = asinf(point2.z - point1.z) / distanceBetweenTwoPoints(point1, point2) * (180 / PI);
+
+	std::cout << "arcTanAngleX: " << arcTanAngleX << std::endl;
+	std::cout << "arcTanAngleY: " << arcTanAngleY << std::endl;
 	
 	resultantAngles.x = arcTanAngleX;
 	resultantAngles.y = arcTanAngleY;
