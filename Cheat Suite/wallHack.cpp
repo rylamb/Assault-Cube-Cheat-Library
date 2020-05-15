@@ -3,6 +3,7 @@
 ** the definitions of all helper functions needed to make it work.
 *********************************************************************/
 
+#include "pch.h"
 #include "wallHack.h"
 
 //If the current entity's team number is equal to the local player's team number, it returns false so that the
