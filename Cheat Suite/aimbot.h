@@ -48,8 +48,8 @@ struct Player
 {
 	playerent* entAddr = nullptr;
 	float distanceToPlayer = 0;
+	float deltaTargetAngle = 0;
 	Vector3 targetAngles;
-
 };
 
 namespace Aimbot
@@ -64,4 +64,5 @@ namespace Aimbot
 	Vector3 findAngle(Vector3, Vector3);
 	float distanceBetweenTwoPoints(Vector3, Vector3);
 	bool comparator(Player, Player);
+	void findDeltaAngles(std::vector<Player> targets);
 }

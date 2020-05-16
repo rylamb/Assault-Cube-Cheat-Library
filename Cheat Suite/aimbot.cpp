@@ -34,7 +34,7 @@ Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
 	// Calculates the angles between a vector defined by 2 points and the x,y,z axis
 	Vector3 resultantAngles;
 	float arcTanAngleX = ((-atan2f(point2.x - point1.x, point2.y - point1.y) * (180 / PI)) + 180);
-	float arcTanAngleY = asinf(point2.z - point1.z) / distanceBetweenTwoPoints(point1, point2) * (180 / PI);
+	float arcTanAngleY = asinf((point2.z - point1.z) / distanceBetweenTwoPoints(point1, point2)) * (180 / PI);
 
 	std::cout << "arcTanAngleX: " << arcTanAngleX << std::endl;
 	std::cout << "arcTanAngleY: " << arcTanAngleY << std::endl;
@@ -43,6 +43,26 @@ Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
 	resultantAngles.y = arcTanAngleY;
 	resultantAngles.z = 0.0;
 	return resultantAngles;
+}
+
+void Aimbot::findDeltaAngles(std::vector<Player> targets)
+{
+	float deltaAngle = 0;
+	Player* bestTarget;
+
+	// Calculates the difference in the angle of where the player is aiming, to a target
+	// Used to find the closest target to crosshair
+	for (unsigned int i = 0; i < targets.size(); i++)
+	{
+		Vector3 tmpDeltaAngle;
+		float initialAngle;
+
+		tmpDeltaAngle.x = targets[i].targetAngles.x - localPlayer->yawPitchRoll.x;
+		tmpDeltaAngle.y = targets[i].targetAngles.y - localPlayer->yawPitchRoll.y;
+		tmpDeltaAngle.z = 0;
+
+		targets[i].deltaTargetAngle = vectorMagnitude(tmpDeltaAngle);
+	}
 }
 
 void Aimbot::run()
@@ -55,6 +75,8 @@ void Aimbot::run()
 		targets[i].targetAngles = findAngle(localPlayer->headPos, targets[i].entAddr->headPos);
 	}
 	
+	findDeltaAngles(targets);
+
 	calcPlayerDistances();
 
 	std::sort(targets.begin(), targets.end(), comparator);
