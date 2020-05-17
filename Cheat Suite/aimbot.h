@@ -52,6 +52,12 @@ struct Player
 	Vector3 targetAngles;
 };
 
+struct TraceResult
+{
+	Vector3 end;
+	bool collided{ false };
+};
+
 namespace Aimbot
 {
 	void run();
@@ -65,4 +71,5 @@ namespace Aimbot
 	float distanceBetweenTwoPoints(Vector3, Vector3);
 	bool comparator(Player, Player);
 	void findDeltaAngles(std::vector<Player> targets);
+	bool isVisible(Player);
 }

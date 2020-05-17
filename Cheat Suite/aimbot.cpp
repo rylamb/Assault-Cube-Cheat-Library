@@ -3,16 +3,23 @@
 #include <cmath>
 #include <algorithm>
 
+/* CITATIONS: 
+https://guidedhacking.com/threads/how-to-find-traceline-call-traceline-with-inline-asm.6695/
+https://guidedhacking.com/threads/how-to-loop-through-entity-list-internally.9892/
+https://guidedhacking.com/threads/assault-cube-triggerbot-tutorial-reversing-reclass-more.9697/
+*/
+
+
 #define PI 3.14159265f
 
 std::vector<Player> playerList;
 std::vector<Player> targets;
 
+
 uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
 playerent* localPlayer = (playerent*)*local_player_addr;
-uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
-int numPlayers = *numPlayersAddr;
+
 
 float Aimbot::vectorMagnitude(Vector3 vect)
 {
@@ -35,9 +42,6 @@ Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
 	Vector3 resultantAngles;
 	float arcTanAngleX = ((-atan2f(point2.x - point1.x, point2.y - point1.y) * (180 / PI)) + 180);
 	float arcTanAngleY = asinf((point2.z - point1.z) / distanceBetweenTwoPoints(point1, point2)) * (180 / PI);
-
-	std::cout << "arcTanAngleX: " << arcTanAngleX << std::endl;
-	std::cout << "arcTanAngleY: " << arcTanAngleY << std::endl;
 	
 	resultantAngles.x = arcTanAngleX;
 	resultantAngles.y = arcTanAngleY;
@@ -48,14 +52,14 @@ Vector3 Aimbot::findAngle(Vector3 point1, Vector3 point2)
 void Aimbot::findDeltaAngles(std::vector<Player> targets)
 {
 	float deltaAngle = 0;
-	Player* bestTarget;
+	Player* bestTarget;		//Unused?
 
 	// Calculates the difference in the angle of where the player is aiming, to a target
 	// Used to find the closest target to crosshair
 	for (unsigned int i = 0; i < targets.size(); i++)
 	{
 		Vector3 tmpDeltaAngle;
-		float initialAngle;
+		float initialAngle;		//Unused?
 
 		tmpDeltaAngle.x = targets[i].targetAngles.x - localPlayer->yawPitchRoll.x;
 		tmpDeltaAngle.y = targets[i].targetAngles.y - localPlayer->yawPitchRoll.y;
@@ -75,7 +79,7 @@ void Aimbot::run()
 		targets[i].targetAngles = findAngle(localPlayer->headPos, targets[i].entAddr->headPos);
 	}
 	
-	findDeltaAngles(targets);
+	findDeltaAngles(targets);	// Not sure if needed? Don't actually know what it's being used for.
 
 	calcPlayerDistances();
 
@@ -99,6 +103,8 @@ void Aimbot::fillEntityArray()
 {
 	uintptr_t entityListPtr = (uintptr_t)local_player_addr + 0x4;		// 10F4F8, location of where bots are stored
 	uintptr_t firstEntity = *(uintptr_t*)entityListPtr + 0x4;		// Index 0 is empty, first bot stored at index 1
+	uintptr_t* numPlayersAddr = (uintptr_t*)0x50F500;					// Location of # of players in game
+	int numPlayers = *numPlayersAddr;
 
 	playerList.clear();
 	for (int i = 0; i < numPlayers - 1; i++)
@@ -121,15 +127,47 @@ void Aimbot::getTargets()
 	targets.clear();
 	for (unsigned int i = 0; i < playerList.size(); i++)
 	{
-		// TODO: Implement team validation to avoid team killing
+		uintptr_t gameMode = *(uintptr_t*)(0x50F49C);
+		if ((gameMode == 0 || gameMode == 4 || gameMode == 5 || gameMode == 7 || gameMode == 11 || gameMode == 13 || gameMode == 14 || gameMode == 16 || gameMode == 17 || gameMode == 20 || gameMode == 21)
+			&& playerList[i].entAddr->team == localPlayer->team)
+		{
+			continue;
+		}
+
 		if (playerList[i].entAddr != nullptr && playerList[i].entAddr->state == 0)
 		{
-			// TODO: Implement visibility checking
-			targets.push_back(playerList[i]);
+				
+			if (isVisible(playerList[i]) == 1)
+				targets.push_back(playerList[i]);
 		}
 	}
 }
 
+bool Aimbot::isVisible(Player target)
+{
+	intptr_t traceline = 0x048a310;
+	TraceResult traceresult;
+	traceresult.collided = false;
+	Vector3 player_head = localPlayer->headPos;
+	Vector3 target_head = target.entAddr->headPos;
+
+	__asm
+	{
+		push 0;
+		push 0;
+		push localPlayer
+		push target_head.z
+		push target_head.y
+		push target_head.x
+		push player_head.z
+		push player_head.y
+		push player_head.x
+		lea eax, [traceresult]
+		call traceline;
+		add esp, 36
+	}
+	return !traceresult.collided;
+}
 
 void Aimbot::calcPlayerDistances()
 {
@@ -178,6 +216,8 @@ void Aimbot::printTargetList()
 {
 	for (unsigned int i = 0; i < targets.size(); i++)
 	{
+		uintptr_t gameMode = *(uintptr_t*)(0x50F49C);
+		std::cout << "Game Mode: " << gameMode << std::endl;
 		std::cout << "Health: " << targets[i].entAddr->playerHealth << std::endl;
 		std::cout << "Armor: " << targets[i].entAddr->playerArmor << std::endl;
 		std::cout << "Team: " << targets[i].entAddr->team << std::endl;

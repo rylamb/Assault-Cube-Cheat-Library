@@ -42,16 +42,16 @@ bool currentMatch::isTeamBased()
 
 //The drawFilledRectangle() does the actual drawing. A RECT object is defined based on the dimensions (x, y, h, and w) passed into the function, 
 //then FillRect (Windows.h function) is called to actually draw the filled in rectangle. Color is determined by the brush passed in.
-void drawFilledRectangle(int x, int y, int w, int h, HBRUSH brush, HDC deviceContext)
+void drawFilledRectangle(float x, float y, float w, float h, HBRUSH brush, HDC deviceContext)
 {
-	RECT rectangle = { x, y, x + w, y + h };
+	RECT rectangle = { long(x), long(y), long(x + w), long(y + h) };
 
 	FillRect(deviceContext, &rectangle, brush);
 }
 
 //The drawBorderBox() function makes 4 calls to drawFilledRectangle() in order to draw 4 separate rectangles (1 for each side of the rectangle), that
 //will make up the box that is drawn around an entity in our main function.
-void drawBorderBox(int x, int y, int w, int h, int thickness, HBRUSH brush, HDC deviceContext)
+void drawBorderBox(float x, float y, float w, float h, float thickness, HBRUSH brush, HDC deviceContext)
 {
 	//Draws the bottom line of our rectangle.
 	drawFilledRectangle(x, y, w, thickness, brush, deviceContext);
@@ -158,7 +158,7 @@ DWORD WINAPI wallHackMain()
 						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
 						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
 						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1, Brush, digitalContextAC);
+						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
 						DeleteObject(Brush);
 					}
 				}
@@ -200,7 +200,7 @@ DWORD WINAPI wallHackMain()
 						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
 						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
 						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1, Brush, digitalContextAC);
+						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
 						DeleteObject(Brush);
 					}
 				}
