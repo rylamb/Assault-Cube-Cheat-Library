@@ -142,6 +142,10 @@ DWORD APIENTRY hackthread(LPVOID hModule)
         {
             Aimbot::run();
         }
+        else if (!GetAsyncKeyState(VK_CAPITAL) && bAimbot)  // Aimbot is running, so make sure we aren't shooting
+        {
+            *(int*)(*local_player_addr + 0x224) = 0;
+        }
 
         Sleep(5);
     }

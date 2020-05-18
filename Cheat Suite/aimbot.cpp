@@ -15,7 +15,6 @@ https://guidedhacking.com/threads/assault-cube-triggerbot-tutorial-reversing-rec
 std::vector<Player> playerList;
 std::vector<Player> targets;
 
-
 uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
 playerent* localPlayer = (playerent*)*local_player_addr;
@@ -90,6 +89,11 @@ void Aimbot::run()
 		localPlayer->yawPitchRoll.x = targets[0].targetAngles.x;
 		localPlayer->yawPitchRoll.y = targets[0].targetAngles.y;
 		localPlayer->yawPitchRoll.z = targets[0].targetAngles.z;
+		*(int*)(*local_player_addr + 0x224) = 1;	// "So anyway...I started blastin'..."
+	}
+	else // No targets, stop shooting
+	{
+		*(int*)(*local_player_addr + 0x224) = 0;
 	}
 }
 
