@@ -43,6 +43,12 @@ struct entList
 class currentMatch
 {
 	public:
+        //Stores the window size of the AssaultCube client in variables. Used these variables since the WorldToScreen function
+        //requires the window size to be passed to it for accuracy. Without reading the window size from AssaultCube's memory,
+        //the size would have to be a fixed value (i.e. passing 1024 and 768, or 1920 and 1080) which is inconvenient for testing.
+        int windowSizeH = *(int*)(0x510C94);
+        int windowSizeV = *(int*)(0x510C98);
+
 		//Each gamemode has a unique number. This will be used to determine if it is a team-based or free-for-all gamemode (converted to an int).
 		int gameMode = *(int*)(0x50F49C);
 		

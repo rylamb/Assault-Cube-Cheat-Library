@@ -183,9 +183,9 @@ DWORD WINAPI wallHackMain()
 				Vec3 entHeadPosition = {entHeadX, entHeadY, entHeadZ};
 
 				//If the enemy is on our screen (determined by return value of WorldToScreen()), draw a rectangle around it.
-				if (WorldToScreen(entPosition, baseVec, esp.viewMatrix, 1024, 768))
+				if (WorldToScreen(entPosition, baseVec, esp.viewMatrix, esp.windowSizeH, esp.windowSizeV))
 				{
-					if (WorldToScreen(entHeadPosition, headVec, esp.viewMatrix, 1024, 768))
+					if (WorldToScreen(entHeadPosition, headVec, esp.viewMatrix, esp.windowSizeH, esp.windowSizeV))
 					{
 						//Entity's head position - base position = head height. Used to determine other rectangle properties below.
 						float head = headVec.y - baseVec.y;
