@@ -98,8 +98,8 @@ class ent
 };
 
 //Helper functions for drawing the rectangle around entities and converting 3D coordinates to screen position.
-void drawFilledRectangle(int x, int y, int w, int h, HBRUSH brush, HDC deviceContext);
-void drawBorderBox(int x, int y, int w, int h, int thickness, HBRUSH brush, HDC deviceContext);
+void drawFilledRectangle(float x, float y, float w, float h, HBRUSH brush, HDC deviceContext);
+void drawBorderBox(float x, float y, float w, float h, float thickness, HBRUSH brush, HDC deviceContext);
 bool WorldToScreen(Vec3 pos, Vec2 &screen, float matrix[16], int windowWidth, int windowHeight);
 
 //Function that contains most of the legwork of the hack and will be injected.

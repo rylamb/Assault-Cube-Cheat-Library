@@ -2,17 +2,25 @@
 #include "pch.h"
 #include "mem.h"
 #include "wallHack.h"
+#include <Windows.h>
+#include <iostream>
+#include "aimbot.h"
+
 
 DWORD APIENTRY hackthread(LPVOID hModule)
 {
+    AllocConsole();
+    FILE* f;
+    freopen_s(&f, "CONOUT$", "w", stdout);
+
     uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
     uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
     
-    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bESP = false;
+    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false, bESP = false;
 
     while (true)
     {
-
+        // Eject DLL
         if (GetAsyncKeyState(VK_END) & 1)
         {
             *(int*)(*local_player_addr + 0xF8) = 100;                               //Restore health to 100
@@ -24,6 +32,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             break;
         }
 
+        // Toggle Infinite Health and Armor
         if (GetAsyncKeyState(VK_F1) & 1)
         {
             if (bInvincible)
@@ -41,6 +50,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             *(int*)(*local_player_addr + 0xFC) = 999;
         }
         
+        // Toggle Infinite Ammo and Grenades
         if (GetAsyncKeyState(VK_F2) & 1)
         {
             bAmmo = !bAmmo;
@@ -58,6 +68,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             }
         }
 
+        // Toggle Recoil
         if (GetAsyncKeyState(VK_F3) & 1)
         {
             bRecoil = !bRecoil;
@@ -71,11 +82,12 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             }
         }
         
+        // Toggle Speed Increase
         if (GetAsyncKeyState(VK_F4) & 1)
         {
             bFast = !bFast;
         }
-        
+
         if (bFast)
         {
             //Switch statement -> check value of Speed/Direction memory address and update as needed
@@ -113,15 +125,33 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             }
         }
 
+        // Toggle ESP
         if (GetAsyncKeyState(VK_F5) & 1)
             bESP = !bESP;
 
         if (bESP)
             wallHackMain();
 
+        // Toggle Aimbot
+        if (GetAsyncKeyState(VK_F6) & 1)
+        {
+            bAimbot = !bAimbot;
+        }
+        
+        if (GetAsyncKeyState(VK_CAPITAL) && bAimbot)
+        {
+            Aimbot::run();
+        }
+        else if (!GetAsyncKeyState(VK_CAPITAL) && bAimbot)  // Aimbot is running, so make sure we aren't shooting
+        {
+            *(int*)(*local_player_addr + 0x224) = 0;
+        }
+
         Sleep(5);
     }
 
+    fclose(f);
+    FreeConsole();
     FreeLibraryAndExitThread((HMODULE)hModule, NULL);
     return 0;
 }
