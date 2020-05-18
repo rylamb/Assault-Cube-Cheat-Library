@@ -6,7 +6,6 @@
 /* CITATIONS: 
 https://guidedhacking.com/threads/how-to-find-traceline-call-traceline-with-inline-asm.6695/
 https://guidedhacking.com/threads/how-to-loop-through-entity-list-internally.9892/
-https://guidedhacking.com/threads/assault-cube-triggerbot-tutorial-reversing-reclass-more.9697/
 */
 
 
