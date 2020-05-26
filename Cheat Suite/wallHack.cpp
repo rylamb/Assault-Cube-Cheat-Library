@@ -5,6 +5,7 @@
 
 #include "pch.h"
 #include "wallHack.h"
+#include "glDraw.h"
 
 //If the current entity's team number is equal to the local player's team number, it returns false so that the
 //main function below knows that the entity is an enemy player. This function is only called if in a team-based match
@@ -157,9 +158,10 @@ DWORD WINAPI wallHackMain()
 						//Creates the brush that is passed to drawBorderBox and sets the color to red. Once drawBorderBox is called,
 						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
 						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
-						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
-						DeleteObject(Brush);
+//						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
+//						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
+//						DeleteObject(Brush);
+                        GL::DrawOutline(baseVec.x + center + 90, baseVec.y + 75, width, head - vertSpace, 1, rgb::red);
 					}
 				}
 			}
@@ -199,10 +201,11 @@ DWORD WINAPI wallHackMain()
 						//Creates the brush that is passed to drawBorderBox and sets the color to red. Once drawBorderBox is called,
 						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
 						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
-						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
-						DeleteObject(Brush);
-					}
+//						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
+//						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
+//						DeleteObject(Brush);
+                        GL::DrawOutline(baseVec.x + center + 90, baseVec.y + 75, width, head - vertSpace, 1, rgb::red);
+                    }
 				}
 			}
 		}
