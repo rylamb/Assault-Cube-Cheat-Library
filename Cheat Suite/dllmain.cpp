@@ -19,7 +19,7 @@ twglSwapBuffers owglSwapBuffers;
 uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 uintptr_t* localPlayerPtr = (uintptr_t*)(moduleBase + 0x10F4F4);
 
-bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false, bESP = false;
+bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false, bESP = false, bEjected = false;
 
 GL::Font glFont;
 const int FONT_HEIGHT = 15;
@@ -123,7 +123,8 @@ BOOL __stdcall hkwglSwapBuffers(HDC hDc)
             mem::write((BYTE*)(moduleBase + 0x637E9), (BYTE*)"\xFF\x0E", 2);       //Restore ammo decrement function
             mem::write((BYTE*)(moduleBase + 0x63378), (BYTE*)"\xFF\x08", 2);       //Restore grenade decrement function
             mem::write((BYTE*)(moduleBase + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);   //Restore recoil function
-            return wglSwapBuffersGateway(hDc);
+            bEjected = true;                                                       //Raise Eject Flag
+            return wglSwapBuffersGateway(hDc);                                     //Exit hook early
         }
 
         // Toggle Infinite Health and Armor
@@ -235,7 +236,20 @@ DWORD WINAPI HackThread(HMODULE hModule)
 {
     Hook SwapBuffersHook("wglSwapBuffers", "opengl32.dll", (BYTE*)hkwglSwapBuffers, (BYTE*)&wglSwapBuffersGateway, 5);
     
+    //Enable Hook
     SwapBuffersHook.Enable();
+
+    while (!bEjected) {
+        //empty while loop to hold execution here until the player chooses to exit DLL
+        continue;
+    }
+
+    //Disable Hook
+    SwapBuffersHook.Disable();
+    
+    //Exits the created thread so we can inject again
+    FreeLibraryAndExitThread(hModule, 0);
+
     return 0;
 }
 
