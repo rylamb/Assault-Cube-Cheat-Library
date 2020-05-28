@@ -9,6 +9,7 @@ https://guidedhacking.com/threads/how-to-get-started-with-opengl-hacks.11475/
 void GL::Font::Build(int height)
 {
 	hdc = wglGetCurrentDC();	//Get current device context
+	hglrc = wglGetCurrentContext();	//Get current rendering context
 	base = glGenLists(96);	//Generate GL list of size 96
 	HFONT hFont = CreateFontA(-height, 0, 0, 0,
 		FW_MEDIUM, FALSE, FALSE, FALSE,

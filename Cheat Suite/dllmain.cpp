@@ -47,11 +47,12 @@ const char* aimbotOFF = "Aimbot [F6] [OFF]";
 
 void Draw()
 {
-    //Get current device context
+    //Get current device and rendering context
     HDC currentHDC = wglGetCurrentDC();
+    HGLRC currentHGLRC = wglGetCurrentContext();
 
     //Build if not already done or context has changed
-    if (!glFont.bBuilt || currentHDC != glFont.hdc)
+    if (!glFont.bBuilt || currentHDC != glFont.hdc || currentHGLRC != glFont.hglrc)
     {
         glFont.Build(FONT_HEIGHT);
     }

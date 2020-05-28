@@ -15,6 +15,7 @@ namespace GL
 		bool bBuilt = false;
 		unsigned int base;
 		HDC hdc = nullptr;
+		HGLRC hglrc = nullptr;
 		int height;
 		int width;
 
