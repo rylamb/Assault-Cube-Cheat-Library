@@ -115,15 +115,15 @@ DWORD WINAPI wallHackMain()
 						//Entity's head position - base position = head height. Used to determine other rectangle properties below.
 						float head = headVec.y - baseVec.y;
 						//Head height / 1.5 = width of the box (how wide the box is horizontally)
-						float width = head / 1.5;
+						float width = head / 1.5f;
 						//Width / -2 = center of the box (centers the box over the entity)
 						float center = width / -2;
 						//Head height / -2.5 = extra space (changing this value affects the height of the box (i.e. removing / -6 just draws a line under the entity's feet)
-						float vertSpace = head / -2.5;
+						float vertSpace = head / -2.5f;
 
 						//Call to the OpenGL version of drawing a box. Function borrowed from Kitch's OpenGL GUI. See definition
 						//in glDraw.cpp. This does the actual drawing of the box around the entities.
-                        GL::DrawOutline((baseVec.x + center) * 1.17, baseVec.y * 1.17, width, head - vertSpace, 1, rgb::red);
+                        GL::DrawOutline((baseVec.x + center) * 1.17f, baseVec.y * 1.17f, width, head - vertSpace, 1, rgb::red);
 					}
 				}
 			}
@@ -154,15 +154,15 @@ DWORD WINAPI wallHackMain()
 						//Entity's head position - base position = head height. Used to determine other rectangle properties below.
 						float head = headVec.y - baseVec.y;
 						//Head height / 2 = width of the box (how wide the box is horizontally)
-						float width = head / 1.5;
+						float width = head / 1.5f;
 						//Width / -2 = center of the box (centers the box over the entity)
 						float center = width / -2;
 						//Head height / -6 = vertical space (changing this value affects the height of the box (i.e. removing / -6 just draws a line under the entity's feet)
-						float vertSpace = head / -2.5;
+						float vertSpace = head / -2.5f;
 
 						//Call to the OpenGL version of drawing a box. Function borrowed from Kitch's OpenGL GUI. See definition
 						//in glDraw.cpp. This does the actual drawing of the box around the entities.
-                        GL::DrawOutline((baseVec.x + center) * 1.17, baseVec.y * 1.17, width, head - vertSpace, 1, rgb::red);
+                        GL::DrawOutline((baseVec.x + center) * 1.17f, baseVec.y * 1.17f, width, head - vertSpace, 1, rgb::red);
                     }
 				}
 			}
