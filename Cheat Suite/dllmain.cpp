@@ -44,6 +44,7 @@ const char* espOFF = "ESP [F5] [OFF]";
 
 const char* aimbotON = "Aimbot [F6] [ON]";
 const char* aimbotOFF = "Aimbot [F6] [OFF]";
+const char* aimbotInstructions = "Hold Caps Lock";
 
 void Draw()
 {
@@ -61,51 +62,49 @@ void Draw()
     GL::SetupOrtho();
 
     //Draw outline of Menu
-    GL::DrawOutline(820, 205, 200, 110, 2.0f, rgb::green);
+    //GL::DrawOutline(820, 205, 200, 110, 2.0f, rgb::green);
+    GL::DrawOutline(10, 25, 200, 110, 2.0f, rgb::green);
 
     //Draw Title
-    float title_textPointX = glFont.centerText(830, 200, strlen(title) * FONT_WIDTH);
-    float title_textPointY = 205 - FONT_HEIGHT / 2;
+    float title_textPointX = glFont.centerText(10, 200, strlen(title) * FONT_WIDTH);
+    float title_textPointY = 25 - FONT_HEIGHT / 2;
     glFont.Print(title_textPointX, title_textPointY, rgb::green, "%s", title);
 
+    //Declare starting positions for inner text elements
+    float innerTextX = 15;
+    float innerTextStartY = 45;
+
     //Draw Invincibility Status
-    float invincible_textPointX = 825;
-    float invincible_textPointY = 225;
-    if (bInvincible) glFont.Print(invincible_textPointX, invincible_textPointY, rgb::green, "%s", invincibleON);
-    else glFont.Print(invincible_textPointX, invincible_textPointY, rgb::red, "%s", invincibleOFF);
+    if (bInvincible) glFont.Print(innerTextX, innerTextStartY, rgb::green, "%s", invincibleON);
+    else glFont.Print(innerTextX, innerTextStartY, rgb::red, "%s", invincibleOFF);
 
     //Draw Max Ammo Status
-    float ammo_textPointX = 825;
-    float ammo_textPointY = 240;
-    if (bAmmo) glFont.Print(ammo_textPointX, ammo_textPointY, rgb::green, "%s", ammoON);
-    else glFont.Print(ammo_textPointX, ammo_textPointY, rgb::red, "%s", ammoOFF);
+    if (bAmmo) glFont.Print(innerTextX, innerTextStartY + FONT_HEIGHT, rgb::green, "%s", ammoON);
+    else glFont.Print(innerTextX, innerTextStartY + FONT_HEIGHT, rgb::red, "%s", ammoOFF);
 
     //Draw Recoil Status
-    float recoil_textPointX = 825;
-    float recoil_textPointY = 255;
-    if (bRecoil) glFont.Print(recoil_textPointX, recoil_textPointY, rgb::green, "%s", recoilON);
-    else glFont.Print(recoil_textPointX, recoil_textPointY, rgb::red, "%s", recoilOFF);
+    if (bRecoil) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 2), rgb::green, "%s", recoilON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 2), rgb::red, "%s", recoilOFF);
 
     //Draw Speed Status
-    float speed_textPointX = 825;
-    float speed_textPointY = 270;
-    if (bFast) glFont.Print(speed_textPointX, speed_textPointY, rgb::green, "%s", speedON);
-    else glFont.Print(speed_textPointX, speed_textPointY, rgb::red, "%s", speedOFF);
+    if (bFast) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 3), rgb::green, "%s", speedON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 3), rgb::red, "%s", speedOFF);
 
     //Draw ESP Status
-    float esp_textPointX = 825;
-    float esp_textPointY = 285;
-    if (bESP) glFont.Print(esp_textPointX, esp_textPointY, rgb::green, "%s", espON);
-    else glFont.Print(esp_textPointX, esp_textPointY, rgb::red, "%s", espOFF);
+    if (bESP) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 4), rgb::green, "%s", espON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 4), rgb::red, "%s", espOFF);
 
     //Draw Aimbot Status
-    float aimbot_textPointX = 825;
-    float aimbot_textPointY = 300;
-    if (bAimbot) glFont.Print(aimbot_textPointX, aimbot_textPointY, rgb::green, "%s", aimbotON);
-    else glFont.Print(aimbot_textPointX, aimbot_textPointY, rgb::red, "%s", aimbotOFF);
+    if (bAimbot) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 5), rgb::green, "%s", aimbotON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 5), rgb::red, "%s", aimbotOFF);
+
+    //Draw Aimbot Additional Instructions
+    float centerX = glFont.centerText(10, 200, strlen(aimbotInstructions) * FONT_WIDTH);
+    if (bAimbot) glFont.Print(centerX, 152, rgb::green, "%s", aimbotInstructions);
 
     GL::RestoreGL();
 }
+
 
 //Hack moved into the hooked function
 BOOL __stdcall hkwglSwapBuffers(HDC hDc)
@@ -247,6 +246,7 @@ DWORD WINAPI HackThread(HMODULE hModule)
 
     //Disable Hook
     SwapBuffersHook.Disable();
+    Sleep(10);
     
     //Exits the created thread so we can inject again
     FreeLibraryAndExitThread(hModule, 0);
