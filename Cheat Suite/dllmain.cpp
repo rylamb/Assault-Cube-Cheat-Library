@@ -1,35 +1,130 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "mem.h"
+#include "proc.h"
+#include "hook.h"
+#include "glDraw.h"
+#include "glText.h"
 #include "wallHack.h"
 #include <Windows.h>
 #include <iostream>
 #include "aimbot.h"
 
+typedef BOOL(__stdcall* twglSwapBuffers)(HDC hDc);
 
-DWORD APIENTRY hackthread(LPVOID hModule)
+twglSwapBuffers wglSwapBuffersGateway;
+twglSwapBuffers owglSwapBuffers;
+
+//Get module base and player ptr
+uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
+uintptr_t* localPlayerPtr = (uintptr_t*)(moduleBase + 0x10F4F4);
+
+bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false, bESP = false, bEjected = false;
+
+GL::Font glFont;
+const int FONT_HEIGHT = 15;
+const int FONT_WIDTH = 9;
+
+const char* title = "AC_EZ_Mode";
+
+const char* invincibleON = "Invincible [F1] [ON]";
+const char* invincibleOFF = "Invincible [F1] [OFF]";
+
+const char* ammoON = "Max Ammo [F2] [ON]";
+const char* ammoOFF = "Max Ammo [F2] [OFF]";
+
+const char* recoilON = "No Recoil [F3] [ON]";
+const char* recoilOFF = "No Recoil [F3] [OFF]";
+
+const char* speedON = "Speed Boost [F4] [ON]";
+const char* speedOFF = "Speed Boost [F4] [OFF]";
+
+const char* espON = "ESP [F5] [ON]";
+const char* espOFF = "ESP [F5] [OFF]";
+
+const char* aimbotON = "Aimbot [F6] [ON]";
+const char* aimbotOFF = "Aimbot [F6] [OFF]";
+const char* aimbotInstructions = "Hold Caps Lock";
+
+void Draw()
 {
-    AllocConsole();
-    FILE* f;
-    freopen_s(&f, "CONOUT$", "w", stdout);
+    //Get current device and rendering context
+    HDC currentHDC = wglGetCurrentDC();
+    HGLRC currentHGLRC = wglGetCurrentContext();
 
-    uintptr_t module_base = (uintptr_t)GetModuleHandle(L"ac_client.exe");
-    uintptr_t* local_player_addr = (uintptr_t*)(module_base + 0x10F4F4);
-    
-    bool bAmmo = false, bInvincible = false, bRecoil = false, bFast = false, bAimbot = false, bESP = false;
+    //Build if not already done or context has changed
+    if (!glFont.bBuilt || currentHDC != glFont.hdc || currentHGLRC != glFont.hglrc)
+    {
+        glFont.Build(FONT_HEIGHT);
+    }
 
-    while (true)
+    //Do the thing - setup, draw, and restore
+    GL::SetupOrtho();
+
+    //Draw outline of Menu
+    //GL::DrawOutline(820, 205, 200, 110, 2.0f, rgb::green);
+    GL::DrawOutline(10, 25, 200, 110, 2.0f, rgb::green);
+
+    //Draw Title
+    float title_textPointX = glFont.centerText(10, 200, strlen(title) * FONT_WIDTH);
+    float title_textPointY = 25 - FONT_HEIGHT / 2;
+    glFont.Print(title_textPointX, title_textPointY, rgb::green, "%s", title);
+
+    //Declare starting positions for inner text elements
+    float innerTextX = 15;
+    float innerTextStartY = 45;
+
+    //Draw Invincibility Status
+    if (bInvincible) glFont.Print(innerTextX, innerTextStartY, rgb::green, "%s", invincibleON);
+    else glFont.Print(innerTextX, innerTextStartY, rgb::red, "%s", invincibleOFF);
+
+    //Draw Max Ammo Status
+    if (bAmmo) glFont.Print(innerTextX, innerTextStartY + FONT_HEIGHT, rgb::green, "%s", ammoON);
+    else glFont.Print(innerTextX, innerTextStartY + FONT_HEIGHT, rgb::red, "%s", ammoOFF);
+
+    //Draw Recoil Status
+    if (bRecoil) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 2), rgb::green, "%s", recoilON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 2), rgb::red, "%s", recoilOFF);
+
+    //Draw Speed Status
+    if (bFast) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 3), rgb::green, "%s", speedON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 3), rgb::red, "%s", speedOFF);
+
+    //Draw ESP Status
+    if (bESP) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 4), rgb::green, "%s", espON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 4), rgb::red, "%s", espOFF);
+
+    //Draw Aimbot Status
+    if (bAimbot) glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 5), rgb::green, "%s", aimbotON);
+    else glFont.Print(innerTextX, innerTextStartY + (FONT_HEIGHT * 5), rgb::red, "%s", aimbotOFF);
+
+    //Draw Aimbot Additional Instructions
+    float centerX = glFont.centerText(10, 200, strlen(aimbotInstructions) * FONT_WIDTH);
+    if (bAimbot) glFont.Print(centerX, 152, rgb::green, "%s", aimbotInstructions);
+
+    GL::RestoreGL();
+}
+
+
+//Hack moved into the hooked function
+BOOL __stdcall hkwglSwapBuffers(HDC hDc)
+{
+    //std::cout << "Hooked" << std::endl;
+
+    //Start of hack in old while loop
+    if (localPlayerPtr)
     {
         // Eject DLL
         if (GetAsyncKeyState(VK_END) & 1)
         {
-            *(int*)(*local_player_addr + 0xF8) = 100;                               //Restore health to 100
-            *(int*)(*local_player_addr + 0xFC) = 0;                                 //Restore armor to 0
-            *(int*)(*local_player_addr + 0x158) -= 1;                               //Remove gobstopper grenade
-            mem::write((BYTE*)(module_base + 0x637E9), (BYTE*)"\xFF\x0E", 2);       //Restore ammo decrement function
-            mem::write((BYTE*)(module_base + 0x63378), (BYTE*)"\xFF\x08", 2);       //Restore grenade decrement function
-            mem::write((BYTE*)(module_base + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);   //Restore recoil function
-            break;
+            *(int*)(*localPlayerPtr + 0xF8) = 100;                               //Restore health to 100
+            *(int*)(*localPlayerPtr + 0xFC) = 0;                                 //Restore armor to 0
+            //*(int*)(*localPlayerPtr + 0x158) -= 1;                               //Remove gobstopper grenade
+            mem::write((BYTE*)(moduleBase + 0x637E9), (BYTE*)"\xFF\x0E", 2);       //Restore ammo decrement function
+            mem::write((BYTE*)(moduleBase + 0x63378), (BYTE*)"\xFF\x08", 2);       //Restore grenade decrement function
+            mem::write((BYTE*)(moduleBase + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);   //Restore recoil function
+            bEjected = true;                                                       //Raise Eject Flag
+            return wglSwapBuffersGateway(hDc);                                     //Exit hook early
         }
 
         // Toggle Infinite Health and Armor
@@ -37,8 +132,8 @@ DWORD APIENTRY hackthread(LPVOID hModule)
         {
             if (bInvincible)
             {
-                *(int*)(*local_player_addr + 0xF8) = 100;
-                *(int*)(*local_player_addr + 0xFC) = 0;
+                *(int*)(*localPlayerPtr + 0xF8) = 100;
+                *(int*)(*localPlayerPtr + 0xFC) = 0;
             }
 
             bInvincible = !bInvincible;
@@ -46,25 +141,25 @@ DWORD APIENTRY hackthread(LPVOID hModule)
 
         if (bInvincible)    //Replenish health/armor indefinitely
         {
-            *(int*)(*local_player_addr + 0xF8) = 999;
-            *(int*)(*local_player_addr + 0xFC) = 999;
+            *(int*)(*localPlayerPtr + 0xF8) = 999;
+            *(int*)(*localPlayerPtr + 0xFC) = 999;
         }
-        
+
         // Toggle Infinite Ammo and Grenades
         if (GetAsyncKeyState(VK_F2) & 1)
         {
             bAmmo = !bAmmo;
             if (bAmmo)
             {
-                *(int*)(*local_player_addr + 0x158) += 1;       //Give an gobstopper grenade. It's everlasting!
-                mem::nop((BYTE*)(module_base + 0x637E9), 2);    //Disable the ammo decrement function
-                mem::nop((BYTE*)(module_base + 0x63378), 2);    //Disable the grenade decrement function
+                //*(int*)(*localPlayerPtr + 0x158) += 1;       //Give an gobstopper grenade. It's everlasting!
+                mem::nop((BYTE*)(moduleBase + 0x637E9), 2);    //Disable the ammo decrement function
+                //mem::nop((BYTE*)(moduleBase + 0x63378), 2);    //Disable the grenade decrement function
             }
             else
             {
-                *(int*)(*local_player_addr + 0x158) -= 1;                           //Remove gobstopper grenade
-                mem::write((BYTE*)(module_base + 0x637E9), (BYTE*)"\xFF\x0E", 2);   //Enable ammo decrement function
-                mem::write((BYTE*)(module_base + 0x63378), (BYTE*)"\xFF\x08", 2);   //Enable grenade decrement function
+                //*(int*)(*localPlayerPtr + 0x158) -= 1;                           //Remove gobstopper grenade
+                mem::write((BYTE*)(moduleBase + 0x637E9), (BYTE*)"\xFF\x0E", 2);   //Enable ammo decrement function
+                //mem::write((BYTE*)(moduleBase + 0x63378), (BYTE*)"\xFF\x08", 2);   //Enable grenade decrement function
             }
         }
 
@@ -74,14 +169,14 @@ DWORD APIENTRY hackthread(LPVOID hModule)
             bRecoil = !bRecoil;
             if (bRecoil)
             {
-                mem::write((BYTE*)(module_base + 0x62020), (BYTE*)"\xC2\x08\x00", 3);       //Skip function by immediately returning 8 bytes
+                mem::write((BYTE*)(moduleBase + 0x62020), (BYTE*)"\xC2\x08\x00", 3);       //Skip function by immediately returning 8 bytes
             }
             else
             {
-                mem::write((BYTE*)(module_base + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);       //Restore recoil function
+                mem::write((BYTE*)(moduleBase + 0x62020), (BYTE*)"\x55\x8B\xEC", 3);       //Restore recoil function
             }
         }
-        
+
         // Toggle Speed Increase
         if (GetAsyncKeyState(VK_F4) & 1)
         {
@@ -91,7 +186,7 @@ DWORD APIENTRY hackthread(LPVOID hModule)
         if (bFast)
         {
             //Switch statement -> check value of Speed/Direction memory address and update as needed
-            int* speed = (int*)(*local_player_addr + 0x80);
+            int* speed = (int*)(*localPlayerPtr + 0x80);
             switch (*speed)
             {
             case 1:     //Forward
@@ -104,22 +199,6 @@ DWORD APIENTRY hackthread(LPVOID hModule)
                 *speed = 254;
                 break;
             }
-            /*
-            left and right strafe commented out 
-            because modifying them results in 
-            diagonal movement & movement lock
-
-            case 65280: //Right
-            {
-                *speed = 65282;
-                break;
-            }
-            case 256:   //Left
-            {
-                *speed = 258;
-                break;
-            }
-            */
             default:
                 break;
             }
@@ -137,36 +216,57 @@ DWORD APIENTRY hackthread(LPVOID hModule)
         {
             bAimbot = !bAimbot;
         }
-        
+
         if (GetAsyncKeyState(VK_CAPITAL) && bAimbot)
         {
             Aimbot::run();
         }
-        else if (!GetAsyncKeyState(VK_CAPITAL) && bAimbot)  // Aimbot is running, so make sure we aren't shooting
+        else if (!GetAsyncKeyState(VK_CAPITAL) && bAimbot && !GetAsyncKeyState(VK_LBUTTON))  // Aimbot is running, so make sure we aren't shooting
         {
-            *(int*)(*local_player_addr + 0x224) = 0;
+            *(int*)(*localPlayerPtr + 0x224) = 0;
         }
+    }
+    //End of old while loop hack
+    Draw();
 
-        Sleep(5);
+    return wglSwapBuffersGateway(hDc);
+}
+
+DWORD WINAPI HackThread(HMODULE hModule)
+{
+    Hook SwapBuffersHook("wglSwapBuffers", "opengl32.dll", (BYTE*)hkwglSwapBuffers, (BYTE*)&wglSwapBuffersGateway, 5);
+    
+    //Enable Hook
+    SwapBuffersHook.Enable();
+
+    while (!bEjected) {
+        //empty while loop to hold execution here until the player chooses to exit DLL
+        continue;
     }
 
-    fclose(f);
-    FreeConsole();
-    FreeLibraryAndExitThread((HMODULE)hModule, NULL);
+    //Disable Hook
+    SwapBuffersHook.Disable();
+    Sleep(10);
+    
+    //Exits the created thread so we can inject again
+    FreeLibraryAndExitThread(hModule, 0);
+
     return 0;
 }
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+BOOL APIENTRY DllMain(HMODULE hModule,
+    DWORD  ul_reason_for_call,
+    LPVOID lpReserved)
 {
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        CloseHandle(CreateThread(nullptr, 0, hackthread, hModule, 0, nullptr));
-        break;
-    default:
+    {
+        CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)HackThread, hModule, 0, nullptr));
+    }
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

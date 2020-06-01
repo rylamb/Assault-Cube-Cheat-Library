@@ -5,6 +5,7 @@
 
 #include "pch.h"
 #include "wallHack.h"
+#include "glDraw.h"
 
 //If the current entity's team number is equal to the local player's team number, it returns false so that the
 //main function below knows that the entity is an enemy player. This function is only called if in a team-based match
@@ -36,34 +37,6 @@ bool currentMatch::isTeamBased()
 		return true;
 	else 
 		return false;
-}
-
-//CITATION: The drawFilledRectangle() and drawBorderBox() functions are modified functions similar to functions found via GuidedHacking.com.
-
-//The drawFilledRectangle() does the actual drawing. A RECT object is defined based on the dimensions (x, y, h, and w) passed into the function, 
-//then FillRect (Windows.h function) is called to actually draw the filled in rectangle. Color is determined by the brush passed in.
-void drawFilledRectangle(float x, float y, float w, float h, HBRUSH brush, HDC deviceContext)
-{
-	RECT rectangle = { long(x), long(y), long(x + w), long(y + h) };
-
-	FillRect(deviceContext, &rectangle, brush);
-}
-
-//The drawBorderBox() function makes 4 calls to drawFilledRectangle() in order to draw 4 separate rectangles (1 for each side of the rectangle), that
-//will make up the box that is drawn around an entity in our main function.
-void drawBorderBox(float x, float y, float w, float h, float thickness, HBRUSH brush, HDC deviceContext)
-{
-	//Draws the bottom line of our rectangle.
-	drawFilledRectangle(x, y, w, thickness, brush, deviceContext);
-
-	//Draws the right line of our rectangle.
-	drawFilledRectangle(x, y, thickness, h, brush, deviceContext);
-
-	//Draws the left line of our rectangle.
-	drawFilledRectangle(x + w, y, thickness, h, brush, deviceContext);
-
-	//Draws the top line of our rectangle.
-	drawFilledRectangle(x, y + h, w + thickness, thickness, brush, deviceContext);
 }
 
 //WorldToScreen function transforms a matrix (3D coordinates) into a position on the screen, 
@@ -102,12 +75,6 @@ DWORD WINAPI wallHackMain()
 	//Declares a new currentMatch object so we can access the classes variables and functions.
 	currentMatch esp;
 
-	//HWND object holds the AssaultCube window.
-	HWND windowAC = FindWindow(0, TEXT("AssaultCube"));
-
-	//HDC object holds a device context (DC) object. This one holds the DC of the AssaultCube window. Used as part of the drawing functions.
-	HDC digitalContextAC = GetDC(windowAC);
-
 	//Holds the raw address of the first entity in the entity list.
 	DWORD entityList = *(DWORD*)(0x0050F4F4 + 0x4);
 
@@ -141,25 +108,22 @@ DWORD WINAPI wallHackMain()
 				Vec3 entHeadPos = { entHeadX, entHeadY, entHeadZ };
 
 				//If the enemy is on our screen (determined by return value of WorldToScreen()), draw a rectangle around it.
-				if (WorldToScreen(entPos, baseVec, esp.viewMatrix, 1024, 768))
+				if (WorldToScreen(entPos, baseVec, esp.viewMatrix, esp.windowSizeH, esp.windowSizeV))
 				{
-					if (WorldToScreen(entHeadPos, headVec, esp.viewMatrix, 1024, 768))
+					if (WorldToScreen(entHeadPos, headVec, esp.viewMatrix, esp.windowSizeH, esp.windowSizeV))
 					{
 						//Entity's head position - base position = head height. Used to determine other rectangle properties below.
 						float head = headVec.y - baseVec.y;
-						//Head height / 2 = width of the box (how wide the box is horizontally)
-						float width = head / 2;
+						//Head height / 1.5 = width of the box (how wide the box is horizontally)
+						float width = head / 1.5f;
 						//Width / -2 = center of the box (centers the box over the entity)
 						float center = width / -2;
-						//Head height / -6 = extra space (changing this value affects the height of the box (i.e. removing / -6 just draws a line under the entity's feet)
-						float vertSpace = head / -6;
+						//Head height / -2.5 = extra space (changing this value affects the height of the box (i.e. removing / -6 just draws a line under the entity's feet)
+						float vertSpace = head / -2.5f;
 
-						//Creates the brush that is passed to drawBorderBox and sets the color to red. Once drawBorderBox is called,
-						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
-						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
-						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
-						DeleteObject(Brush);
+						//Call to the OpenGL version of drawing a box. Function borrowed from Kitch's OpenGL GUI. See definition
+						//in glDraw.cpp. This does the actual drawing of the box around the entities.
+                        GL::DrawOutline((baseVec.x + center) * 1.17f, baseVec.y * 1.17f, width, head - vertSpace, 1, rgb::red);
 					}
 				}
 			}
@@ -190,26 +154,20 @@ DWORD WINAPI wallHackMain()
 						//Entity's head position - base position = head height. Used to determine other rectangle properties below.
 						float head = headVec.y - baseVec.y;
 						//Head height / 2 = width of the box (how wide the box is horizontally)
-						float width = head / 2;
+						float width = head / 1.5f;
 						//Width / -2 = center of the box (centers the box over the entity)
 						float center = width / -2;
 						//Head height / -6 = vertical space (changing this value affects the height of the box (i.e. removing / -6 just draws a line under the entity's feet)
-						float vertSpace = head / -6;
+						float vertSpace = head / -2.5f;
 
-						//Creates the brush that is passed to drawBorderBox and sets the color to red. Once drawBorderBox is called,
-						//the actual rectangle is drawn around the enemy. The BRUSH and call to DeleteObject have to be done within
-						//the for loop or unintended consequences happen (i.e. boxes start being drawn in white after a few seconds).
-						HBRUSH Brush = CreateSolidBrush(RGB(252, 3, 3));
-						drawBorderBox(baseVec.x + center, baseVec.y, width, head - vertSpace, 1., Brush, digitalContextAC);
-						DeleteObject(Brush);
-					}
+						//Call to the OpenGL version of drawing a box. Function borrowed from Kitch's OpenGL GUI. See definition
+						//in glDraw.cpp. This does the actual drawing of the box around the entities.
+                        GL::DrawOutline((baseVec.x + center) * 1.17f, baseVec.y * 1.17f, width, head - vertSpace, 1, rgb::red);
+                    }
 				}
 			}
 		}
 	}
-
-	//Deallocate memory created by GetDC to avoid memory leaks.
-	DeleteObject(digitalContextAC);
 
 	return 0;
 }
