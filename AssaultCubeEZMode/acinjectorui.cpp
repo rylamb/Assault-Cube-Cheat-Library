@@ -97,6 +97,7 @@ void ACInjectorUI::injectableFoundUpdate()
     //or injectableFilePath is set to non-dll file -> set fail status
     ui->InjectableFoundIcon->setPixmap(failImg);
     ui->InjectableFoundText->setText(failMsg);
+    this->injectableFilePath = "";
     this->dllSet = false;
     this->checkInjectReady();
 }
@@ -182,7 +183,8 @@ bool ACInjectorUI::isRunning()
     //Get new processID -> Assault Cube is running if getProcId returns non-zero value
     this->acProcessID = this->getProcId(L"ac_client.exe");
     if(this->acProcessID == 0) {
-        this->showError("Error: Assault Cube Process Not Found");
+        this->showError("Error: Assault Cube Process Not Found."
+                        "\nEnsure Assault Cube is running and try again.");
         return false;
     }
     return true;
@@ -253,8 +255,8 @@ void ACInjectorUI::on_LocationBrowseButton_clicked()
         QDir::currentPath(),
         "All files (*.*)");
     injectableFilePath = fileName;
-    ui->LocationTextField->setText(fileName);
     this->injectableFoundUpdate();
+    ui->LocationTextField->setText(injectableFilePath);
 }
 
 void ACInjectorUI::on_InjectEjectButton_clicked()
@@ -355,8 +357,9 @@ void ACInjectorUI::on_InjectEjectButton_clicked()
         void* loc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
         if(!WriteProcessMemory(hProc, loc, dllPath, strlen(dllPath) + 1, 0)) {
-            errorCode = QString::number(GetLastError());
-            showError("Error: WriteProcessMemory Failure\nError Code: " + errorCode);
+            //errorCode = QString::number(GetLastError());
+            //showError("Error: WriteProcessMemory Failure\nError Code: " + errorCode);
+            processFoundUpdate();   //The process wasn't found - update the UI
         }
 
         HANDLE hThread = CreateRemoteThread(hProc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibraryA, loc, 0, 0);
@@ -369,8 +372,9 @@ void ACInjectorUI::on_InjectEjectButton_clicked()
             showError("Error: CreateRemoteThread Failure\nError Code: " + errorCode);
         }
     } else {
-        errorCode = QString::number(GetLastError());
-        showError("Error: OpenProcess Failure\nError Code: " + errorCode);
+        //errorCode = QString::number(GetLastError());
+        //showError("Error: OpenProcess Failure\nError Code: " + errorCode);
+        processFoundUpdate();   //The process wasn't found - update the UI
     }
 
     if (hProc)
